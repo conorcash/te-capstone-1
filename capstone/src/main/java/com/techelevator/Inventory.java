@@ -40,8 +40,8 @@ public class Inventory {
         }
     }
 
-    public Item getItem (String input) {
-        return inventory.get(input);
+    public Item getItem (String address) {
+        return inventory.get(address);
     }
 
     public Map<String, Item> getInventory() {

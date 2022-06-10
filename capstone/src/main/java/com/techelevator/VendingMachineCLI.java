@@ -18,7 +18,7 @@ public class VendingMachineCLI {
 		Scanner userInput = new Scanner(System.in);
 		int mainMenuInput = 0;
 		int purchaseMenuInput = 0;
-		BigDecimal tendered = BigDecimal.ZERO;
+		BigDecimal tendered;
 		final String INVALID_SELECTION = "That's not a valid selection.\n";
 
 		final String MAIN_MENU = ("(1) Display Vending Machine Items\n" +
@@ -64,7 +64,7 @@ public class VendingMachineCLI {
 						System.out.println(displayInventory(inventory));
 						System.out.print("Enter item code: ");
 						String address = userInput.nextLine().toUpperCase();
-						if(inventory.itemExists(address) && transaction.buy(address,inventory)) {
+						if (inventory.itemExists(address) && transaction.buy(address,inventory)) {
 							Item item = inventory.getItem(address);
 							String name = item.getName();
 							BigDecimal price = item.getPrice();
@@ -97,6 +97,9 @@ public class VendingMachineCLI {
 				}
 			} else if (mainMenuInput == 3) {
 				break;
+			} else if (mainMenuInput == 4) {
+				Report report = new Report(inventory);
+				System.out.println(report.getFileName());
 			} else {
 				System.out.println(INVALID_SELECTION);
 			}
@@ -111,11 +114,10 @@ public class VendingMachineCLI {
 		List<String> addressList = new ArrayList<>(inventory.getInventory().keySet());
 		addressList.sort(null);
 
-		for (String addressItem : addressList) {
-			String name = inventory.getItem(addressItem).getName();
-			String address = inventory.getItem(addressItem).getAddress();
-			BigDecimal price = inventory.getItem(addressItem).getPrice();
-			int quantity = inventory.getItem(addressItem).getQuantity();
+		for (String address : addressList) {
+			String name = inventory.getItem(address).getName();
+			BigDecimal price = inventory.getItem(address).getPrice();
+			int quantity = inventory.getItem(address).getQuantity();
 			String quantityOut = (quantity > 0 ? "Qty: " + Integer.toString(quantity) : "SOLD OUT");
 
 			String itemInfo = String.format("%s - %s - $%.2f - %s\n",address,name,price,quantityOut);
