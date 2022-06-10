@@ -1,50 +1,60 @@
 package com.techelevator;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Transaction {
     private BigDecimal balance = BigDecimal.ZERO;
-    private BigDecimal total = BigDecimal.ZERO;
-    private BigDecimal ONE_HUNDRED = BigDecimal.valueOf(100);
+    private final BigDecimal ONE_HUNDRED = BigDecimal.valueOf(100);
+    private Log log = new Log();
+
+    public enum Coin {
+        QUARTER,
+        DIME,
+        NICKLE
+    }
 
     public Transaction () {
+
     }
 
     public void feedMoney (BigDecimal tendered) {
         this.balance = this.balance.add(tendered);
+        log.logEntry("FEED MONEY:",tendered,balance);
     }
 
     public BigDecimal getBalance() {
         return balance;
     }
 
-    public BigDecimal getTotal() {
-        return total;
-    }
-
-    public String getChange() {
-        int cents = getBalance().multiply(ONE_HUNDRED).intValue();
+    public Map<Coin,Integer> getChangeMap() {
+        Map<Coin,Integer> changeMap = new HashMap<>();
+        BigDecimal change = getBalance();
+        int cents = change.multiply(ONE_HUNDRED).intValue();
         int quarters = cents / 25;
         int dimes = (cents % 25) / 10;
         int nickles = ((cents % 25) % 10) / 5;
+
+        changeMap.put(Coin.QUARTER,quarters);
+        changeMap.put(Coin.DIME,dimes);
+        changeMap.put(Coin.NICKLE,nickles);
+
+        String action = "GIVE CHANGE:";
+
         this.balance = BigDecimal.ZERO;
-
-        return String.format("Quarters: %d\nDimes: %d\nNickles: %d\n",quarters,dimes,nickles);
+        log.logEntry(action,change,balance);
+        return changeMap;
     }
 
-    public boolean charge (BigDecimal cost) {
-        if (getBalance().compareTo(cost) > -1) {
-            this.balance = this.balance.subtract(cost);
-            this.total = this.total.add(cost);
-            return true;
-        }
-        return false;
-    }
-
-    public boolean selection(String address, Inventory inventory) {
+    public boolean buy (String address, Inventory inventory) {
         Item item = inventory.getItem(address);
-        if(item.buy()) {
-            return charge(item.getPrice());
+        BigDecimal cost = item.getPrice();
+        if (getBalance().compareTo(cost) > -1 && item.buy()) {
+            this.balance = this.balance.subtract(cost);
+            String action = item.getName() + " " + item.getAddress();
+            log.logEntry(action,cost,balance);
+            return true;
         }
         return false;
     }

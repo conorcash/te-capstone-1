@@ -31,25 +31,40 @@ public class VendingMachineCLI {
 
 		while (true) {
 			System.out.println(MAIN_MENU);
-			mainMenuInput = Integer.parseInt(userInput.nextLine());
-			if( mainMenuInput == 1) {
+			try {
+				mainMenuInput = Integer.parseInt(userInput.nextLine());
+			} catch (NumberFormatException nfe) {
+				System.out.println(INVALID_SELECTION);
+				continue;
+			}
+			if ( mainMenuInput == 1) {
 				System.out.println(displayInventory(inventory));
 			} else if (mainMenuInput == 2) {
 				Transaction transaction = new Transaction();
 				while (true) {
 					System.out.printf("Current money provided: $%.2f\n", balance);
 					System.out.println(PURCHASE_MENU);
-					purchaseMenuInput = Integer.parseInt(userInput.nextLine());
+					try {
+						purchaseMenuInput = Integer.parseInt(userInput.nextLine());
+					} catch (NumberFormatException nfe) {
+						System.out.println(INVALID_SELECTION);
+						continue;
+					}
 					if (purchaseMenuInput == 1) {
 						System.out.print("Enter whole dollar amount you wish to use: ");
-						tendered = BigDecimal.valueOf(Integer.parseInt(userInput.nextLine()));
+						try {
+							tendered = BigDecimal.valueOf(Integer.parseInt(userInput.nextLine()));
+						} catch (NumberFormatException nfe) {
+							System.out.println(INVALID_SELECTION);
+							continue;
+						}
 						transaction.feedMoney(tendered);
 						balance = transaction.getBalance();
 					} else if (purchaseMenuInput == 2) {
 						System.out.println(displayInventory(inventory));
 						System.out.print("Enter item code: ");
-						String address = userInput.nextLine();
-						if(inventory.itemExists(address) && transaction.selection(address,inventory)) {
+						String address = userInput.nextLine().toUpperCase();
+						if(inventory.itemExists(address) && transaction.buy(address,inventory)) {
 							Item item = inventory.getItem(address);
 							String name = item.getName();
 							BigDecimal price = item.getPrice();
@@ -66,7 +81,11 @@ public class VendingMachineCLI {
 							System.out.println("Item out of stock.");
 						}
 					} else if (purchaseMenuInput == 3) {
-						String change = transaction.getChange();
+						Map<Transaction.Coin,Integer> changeMap = transaction.getChangeMap();
+						int quarters = changeMap.get(Transaction.Coin.QUARTER);
+						int dimes = changeMap.get(Transaction.Coin.DIME);
+						int nickles = changeMap.get(Transaction.Coin.NICKLE);
+						String change = String.format("Quarters: %d\nDimes: %d\nNickles: %d\n",quarters,dimes,nickles);
 						System.out.printf("\n***TRANSACTION COMPLETE***\nChange Returned:\n%s\nThank you, come again.\n",
 								change);
 						System.out.println("**************************");
