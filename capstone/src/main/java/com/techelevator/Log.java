@@ -5,19 +5,15 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class Log {
 
     private final String PATH = "Log.txt";
 
-    DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-    String date = dateFormat.format(LocalDate.now());
-
-    DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("hh:mm:ss a");
-    String time = timeFormat.format(LocalTime.now());
+    DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm:ss a");
+    String stamp = dateFormat.format(LocalDateTime.now());
 
     File log = new File(PATH);
 
@@ -34,7 +30,7 @@ public class Log {
 
     public void logEntry (String action, BigDecimal amount, BigDecimal balance) {
         PrintWriter logger = new PrintWriter(fos);
-        logger.printf("%s %s %s $%.2f $%.2f\n",date,time,action,amount,balance);
+        logger.printf("%s %s $%.2f $%.2f\n",stamp,action,amount,balance);
         logger.flush();
     }
 }

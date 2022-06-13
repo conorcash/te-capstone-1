@@ -6,8 +6,10 @@ import java.util.Map;
 
 public class Transaction {
     private BigDecimal balance = BigDecimal.ZERO;
+    private BigDecimal change = BigDecimal.ZERO;
     private final BigDecimal ONE_HUNDRED = BigDecimal.valueOf(100);
     private Log log = new Log();
+    private Inventory inventory;
 
     public enum Coin {
         QUARTER,
@@ -19,6 +21,10 @@ public class Transaction {
 
     }
 
+    public Transaction (Inventory inventory) {
+        this.inventory = inventory;
+    }
+
     public void feedMoney (BigDecimal tendered) {
         this.balance = this.balance.add(tendered);
         log.logEntry("FEED MONEY:",tendered,balance);
@@ -28,9 +34,14 @@ public class Transaction {
         return balance;
     }
 
+    public void endTransaction () {
+        change = getBalance();
+        this.balance = BigDecimal.ZERO;
+        log.logEntry("GIVE CHANGE:",change,balance);
+    }
+
     public Map<Coin,Integer> getChangeMap() {
         Map<Coin,Integer> changeMap = new HashMap<>();
-        BigDecimal change = getBalance();
         int cents = change.multiply(ONE_HUNDRED).intValue();
         int quarters = cents / 25;
         int dimes = (cents % 25) / 10;
@@ -40,22 +51,22 @@ public class Transaction {
         changeMap.put(Coin.DIME,dimes);
         changeMap.put(Coin.NICKLE,nickles);
 
-        String action = "GIVE CHANGE:";
-
-        this.balance = BigDecimal.ZERO;
-        log.logEntry(action,change,balance);
         return changeMap;
     }
 
-    public boolean buy (String address, Inventory inventory) {
+    public void buy (String address) throws InsufficientBalance, OutOfStock, ItemNotFound {
         Item item = inventory.getItem(address);
         BigDecimal cost = item.getPrice();
         if (getBalance().compareTo(cost) > -1 && item.buy()) {
             this.balance = this.balance.subtract(cost);
             String action = item.getName() + " " + item.getAddress();
             log.logEntry(action,cost,balance);
-            return true;
+        } else if (getBalance().compareTo(cost) == -1) {
+            throw new InsufficientBalance();
+        } else if (item.getQuantity() < 1) {
+            throw new OutOfStock();
+        } else if (item == null) {
+            throw new ItemNotFound();
         }
-        return false;
     }
 }

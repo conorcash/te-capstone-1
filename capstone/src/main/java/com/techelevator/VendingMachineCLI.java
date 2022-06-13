@@ -20,6 +20,9 @@ public class VendingMachineCLI {
 		int purchaseMenuInput = 0;
 		BigDecimal tendered;
 		final String INVALID_SELECTION = "That's not a valid selection.\n";
+		final String OUT_OF_STOCK = "Item out of stock.\n";
+		final String INSUFFICIENT_FUNDS = "Item price exceeds available balance.\n";
+
 
 		final String MAIN_MENU = ("(1) Display Vending Machine Items\n" +
 				"(2) Purchase\n" +
@@ -27,7 +30,7 @@ public class VendingMachineCLI {
 
 		final String PURCHASE_MENU = ("(1) Feed Money\n" +
 				"(2) Select Product\n" +
-				"(3) Finish Transaction\n");
+				"(3) Finish Transaction");
 
 		while (true) {
 			System.out.println(MAIN_MENU);
@@ -40,7 +43,7 @@ public class VendingMachineCLI {
 			if ( mainMenuInput == 1) {
 				System.out.println(displayInventory(inventory));
 			} else if (mainMenuInput == 2) {
-				Transaction transaction = new Transaction();
+				Transaction transaction = new Transaction(inventory);
 				while (true) {
 					System.out.printf("Current money provided: $%.2f\n", balance);
 					System.out.println(PURCHASE_MENU);
@@ -62,33 +65,10 @@ public class VendingMachineCLI {
 						balance = transaction.getBalance();
 					} else if (purchaseMenuInput == 2) {
 						System.out.println(displayInventory(inventory));
-						System.out.print("Enter item code: ");
-						String address = userInput.nextLine().toUpperCase();
-						if (inventory.itemExists(address) && transaction.buy(address,inventory)) {
-							Item item = inventory.getItem(address);
-							String name = item.getName();
-							BigDecimal price = item.getPrice();
-							String message = item.getMessage();
-							balance = transaction.getBalance();
-							System.out.printf("\n***DISPENSED***\nItem: %s\nCost: $%.2f\nRemaining Balance: $%.2f\n%s\n",
-									name,price,balance,message);
-							System.out.println("***************");
-						} else if (inventory.itemExists(address) && inventory.itemInStock(address)) {
-							System.out.println("Insufficient funds.");
-						} else if (!inventory.itemExists(address)) {
-							System.out.println("No item at that address.");
-						} else {
-							System.out.println("Item out of stock.");
-						}
+						String address = userInput.nextLine();
+						selection(transaction,inventory,address);
 					} else if (purchaseMenuInput == 3) {
-						Map<Transaction.Coin,Integer> changeMap = transaction.getChangeMap();
-						int quarters = changeMap.get(Transaction.Coin.QUARTER);
-						int dimes = changeMap.get(Transaction.Coin.DIME);
-						int nickles = changeMap.get(Transaction.Coin.NICKLE);
-						String change = String.format("Quarters: %d\nDimes: %d\nNickles: %d\n",quarters,dimes,nickles);
-						System.out.printf("\n***TRANSACTION COMPLETE***\nChange Returned:\n%s\nThank you, come again.\n",
-								change);
-						System.out.println("**************************");
+						exit(transaction);
 						balance = transaction.getBalance();
 						break;
 					} else {
@@ -124,6 +104,35 @@ public class VendingMachineCLI {
 			displayInventory += itemInfo;
 		}
 		return displayInventory;
+	}
+
+	public static void exit (Transaction transaction) {
+		transaction.endTransaction();
+		Map<Transaction.Coin,Integer> changeMap = transaction.getChangeMap();
+		int quarters = changeMap.get(Transaction.Coin.QUARTER);
+		int dimes = changeMap.get(Transaction.Coin.DIME);
+		int nickles = changeMap.get(Transaction.Coin.NICKLE);
+		String change = String.format("Quarters: %d\nDimes: %d\nNickles: %d\n",quarters,dimes,nickles);
+		System.out.printf("\n***TRANSACTION COMPLETE***\nChange Returned:\n%s\nThank you, come again.\n",
+				change);
+		System.out.println("**************************");
+	}
+
+	public static void selection (Transaction transaction, Inventory inventory, String address) {
+		try {
+			transaction.buy(address);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			return;
+		}
+			Item item = inventory.getItem(address);
+			String name = item.getName();
+			BigDecimal price = item.getPrice();
+			String message = item.getMessage();
+			BigDecimal balance = transaction.getBalance();
+			System.out.printf("\n***DISPENSED***\nItem: %s\nCost: $%.2f\nRemaining Balance: $%.2f\n%s\n",
+					name,price,balance,message);
+			System.out.println("***************");
 	}
 
 }

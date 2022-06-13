@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.math.BigDecimal;
+import java.security.spec.ECField;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,16 +26,19 @@ public class TransactionTests {
 
     @Test
     public void overall_change_and_balance_test () {
-        Transaction transaction = new Transaction();
         Inventory inventory = new Inventory();
+        Transaction transaction = new Transaction(inventory);
         BigDecimal moneyFed = BigDecimal.TEN;
         String selection = "A1";
         BigDecimal expected = BigDecimal.valueOf(6.95);
 
         transaction.feedMoney(moneyFed);
 
-        transaction.buy(selection,inventory);
-
+        try {
+            transaction.buy(selection);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
         BigDecimal change_and_balance = transaction.getBalance();
 
         Assert.assertEquals(expected,change_and_balance);
@@ -42,13 +46,17 @@ public class TransactionTests {
 
     @Test
     public void item_quantity_reduced_when_bought () {
-        Transaction transaction = new Transaction();
         Inventory inventory = new Inventory();
+        Transaction transaction = new Transaction(inventory);
         BigDecimal moneyFed = BigDecimal.TEN;
         String selection = "A1";
 
         transaction.feedMoney(moneyFed);
-        transaction.buy(selection,inventory);
+        try {
+        transaction.buy(selection);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
         int quantity = inventory.getItem(selection).getQuantity();
         int expected = 4;
 
@@ -57,14 +65,19 @@ public class TransactionTests {
 
     @Test
     public void proper_coin_distribution_change () {
-        Transaction transaction = new Transaction();
         Inventory inventory = new Inventory();
+        Transaction transaction = new Transaction(inventory);
         BigDecimal moneyFed = BigDecimal.TEN;
         String selection = "A1";
         Map<Transaction.Coin,Integer> expected = new HashMap<>();
 
         transaction.feedMoney(moneyFed);
-        transaction.buy(selection,inventory);
+        try {
+        transaction.buy(selection);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        transaction.endTransaction();
         expected.put(Transaction.Coin.QUARTER,27);
         expected.put(Transaction.Coin.DIME,2);
         expected.put(Transaction.Coin.NICKLE,0);
